@@ -1,8 +1,8 @@
 FROM debian:stable-slim
 env api=https://api.cjy.me
 env token=MJJ6688
-env nodeId
-env port
+env nodeId=
+env port=
 COPY --from=ochinchina/supervisord /usr/local/bin/supervisord /usr/local/bin/supervisord
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
 RUN --mount=from=busybox:latest,src=/bin/,dst=/bin/ \
