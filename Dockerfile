@@ -10,7 +10,7 @@ RUN --mount=from=busybox:latest,src=/bin/,dst=/bin/ \
 RUN chmod +x /usr/local/bin/v2scar
 RUN apt update && apt install ca-certificates -y && apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists
 RUN echo '[program:log] \n\
-command = bash -c "if [ ! -z $log ]; then sed 's/#std/std/g' -i /etc/supervisord.conf; fi" \n\
+command = sh -c "if [ $log = 'yes' ]; then sed 's/#std/std/g' -i /etc/supervisord.conf; fi" \n\
 startsecs = 0 \n\
 autorestart = false \n\
 startretries = 1 \n\
