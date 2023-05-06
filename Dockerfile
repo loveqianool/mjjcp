@@ -16,12 +16,12 @@ autorestart = false \n\
 startretries = 1 \n\
 [program:v2ray] \n\
 command = v2ray -config=%(ENV_api)s/api/vmess_server_config/%(ENV_port)s/?token=%(ENV_token)s \n\
-#stdout_logfile=/dev/stdout \n\
-#stderr_logfile=/dev/stderr \n\
+\#stdout_logfile=/dev/stdout \n\
+\#stderr_logfile=/dev/stderr \n\
 [program:v2scar] \n\
 depends_on = v2ray \n\
 command = v2scar -id=%(ENV_nodeId)s -gp=127.0.0.1:8079' \n\
-#stdout_logfile=/dev/stdout \n\
-#stderr_logfile=/dev/stderr \
+\#stdout_logfile=/dev/stdout \n\
+\#stderr_logfile=/dev/stderr \
 > /etc/supervisord.conf
 CMD ["supervisord", "-c", "/etc/supervisord.conf"]
