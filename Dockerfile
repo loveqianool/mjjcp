@@ -21,7 +21,7 @@ command = v2ray -config=%(ENV_api)s/api/vmess_server_config/%(ENV_port)s/?token=
 '#'stdout_logfile=/dev/stdout \n\
 '#'stderr_logfile=/dev/stderr \n\
 [program:v2scar] \n\
-depends_on = log,v2ray \n\
+depends_on = log, v2ray \n\
 command = v2scar -id=%(ENV_nodeId)s -gp=127.0.0.1:8079 \n\
 '#'stdout_logfile=/dev/stdout \n\
 '#'stderr_logfile=/dev/stderr' \
