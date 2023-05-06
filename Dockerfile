@@ -5,12 +5,10 @@ env nodeId=
 env port=
 env grpc=8079
 env log=
+RUN apt update && apt install ca-certificates wget -y && apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists
 COPY --from=ochinchina/supervisord /usr/local/bin/supervisord /usr/local/bin/supervisord
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-RUN --mount=from=busybox:latest,src=/bin/,dst=/bin/ \
- wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar
-RUN chmod +x /usr/local/bin/v2scar
-RUN apt update && apt install ca-certificates -y && apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists
+RUN wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar && chmod +x /usr/local/bin/v2scar
 RUN echo '[program:v2ray] \n\
 environment=V2RAY_VMESS_AEAD_FORCED="false" \n\
 command = v2ray -config=%(ENV_api)s/api/vmess_server_config/%(ENV_port)s/?token=%(ENV_token)s \n\
