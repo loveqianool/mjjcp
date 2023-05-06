@@ -20,7 +20,7 @@ command = v2scar -id=%(ENV_nodeId)s -gp=127.0.0.1:8079 \n\
 '#'stdout_logfile=/dev/stdout \n\
 '#'stderr_logfile=/dev/stderr' \
 > /etc/supervisord.conf
-RUN echo 'if [ "$log" = "yes" ]; then sed "s/#std/std/g" -i /etc/supervisord.conf; fi \n\
+RUN echo 'if [ ! -z "$log" ]; then sed "s/#std/std/g" -i /etc/supervisord.conf; fi \n\
 supervisord -c /etc/supervisord.conf' \
 > /z.sh
 CMD [ "sh", "/z.sh" ]
