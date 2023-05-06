@@ -11,7 +11,7 @@ RUN --mount=from=busybox:latest,src=/bin/,dst=/bin/ \
 RUN chmod +x /usr/local/bin/v2scar
 RUN apt update && apt install ca-certificates -y && apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists
 RUN echo '[program:v2ray] \n\
-environment=v2ray_vmess_aead_forced="false" \n\
+environment=V2RAY_VMESS_AEAD_FORCED="false" \n\
 command = v2ray -config=%(ENV_api)s/api/vmess_server_config/%(ENV_port)s/?token=%(ENV_token)s \n\
 '#'stdout_logfile=/dev/stdout \n\
 '#'stderr_logfile=/dev/stderr \n\
