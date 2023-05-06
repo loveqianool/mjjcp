@@ -6,6 +6,7 @@ docker run -dit --name mjjcp --hostname mjjcp \
 -p 端口:端口 -p 端口:端口/udp \
 -e nodeId=主机ID \
 -e port=端口 \
+-e log= \
 -e v2ray.vmess.aead.forced=false \
 ghcr.io/loveqianool/mjjcp
 ```
