@@ -6,17 +6,16 @@ env port=
 env grpc=8079
 env log=
 
-#RUN apt update && apt install wireguard-tools
-RUN apt update && apt install curl iproute2 ca-certificates nano openresolv -y && apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists
+RUN apt update && apt install wireguard-tools curl wget iproute2 ca-certificates nano openresolv -y && apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists
 COPY --from=ochinchina/supervisord /usr/local/bin/supervisord /usr/local/bin/supervisord
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-RUN curl https://github.com/jackma778/sh/raw/main/v2scar -o /usr/local/bin/v2scar && chmod +x /usr/local/bin/v2scar
+RUN wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar && chmod +x /usr/local/bin/v2scar
 
-#RUN sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick \
-# && curl https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem \
-# -o /usr/local/share/ca-certificates/Cloudflare_CA.pem \
-# && chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem \
-# && update-ca-certificates
+RUN sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick \
+ && curl https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem \
+ -o /usr/local/share/ca-certificates/Cloudflare_CA.pem \
+ && chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem \
+ && update-ca-certificates
 
 RUN echo '[program:v2ray] \n\
 environment=V2RAY_VMESS_AEAD_FORCED="false" \n\
