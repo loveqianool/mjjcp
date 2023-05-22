@@ -16,12 +16,12 @@ RUN sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting
  && chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem \
  && update-ca-certificates
 
-RUN 'echo "#/bin/sh \n\
-if [ -f \"/etc/wireguard/wg0.conf\" ]; then wg-quick up wg0 && sleep 3; fi \n\
-v2ray -config=\$api/api/vmess_server_config/\$port/?token=\$token & \n\
-v2scar -id=\$nodeId -gp=127.0.0.1:\$grpc & \n\
-wait -n \n\
-exit $?"' \
-> /z.sh
+RUN cat > /z.sh <<'EOT'
+if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 3; fi
+v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
+v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
+wait -n
+exit $?
+EOT
 
 CMD [ "sh", "/z.sh" ]
