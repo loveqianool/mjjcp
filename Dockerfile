@@ -21,5 +21,6 @@ if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0; fi
 v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
 v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
 fg %1
+EOT
 
 CMD [ "sh", "/z.sh" ]
