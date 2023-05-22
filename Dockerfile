@@ -6,7 +6,7 @@ env port=
 env grpc=8079
 env V2RAY_VMESS_AEAD_FORCED=false
 
-RUN apk add --no-cache wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat
+RUN apk add --no-cache wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat ip6tables
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
 RUN wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar && chmod +x /usr/local/bin/v2scar
 
@@ -20,7 +20,9 @@ RUN cat > /z.sh <<'EOT'
 if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0; fi
 v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
 v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
-fg %2
+while [[ true ]]; do
+    sleep 60
+done
 EOT
 
 CMD [ "sh", "/z.sh" ]
