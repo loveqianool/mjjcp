@@ -1,4 +1,4 @@
-FROM debian:stable-slim
+FROM alpine
 env api=https://api.cjy.me
 env token=MJJ6688
 env nodeId=
@@ -6,7 +6,7 @@ env port=
 env grpc=8079
 env V2RAY_VMESS_AEAD_FORCED=false
 
-RUN apt update && apt install wireguard-tools curl wget iproute2 ca-certificates nano openresolv -y && apt-get clean && rm -rf /var/cache/apt/archives /var/lib/apt/lists
+RUN apk add wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat -y
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
 RUN wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar && chmod +x /usr/local/bin/v2scar
 
