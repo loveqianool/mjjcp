@@ -17,12 +17,9 @@ RUN sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting
  && update-ca-certificates
 
 RUN cat > /z.sh <<'EOT'
-if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 3; fi
+if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0; fi
 v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
 v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
-while [[ true ]]; do
-    sleep 666
-done
-EOT
+fg %1
 
 CMD [ "sh", "/z.sh" ]
