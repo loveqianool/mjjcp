@@ -20,8 +20,9 @@ RUN cat > /z.sh <<'EOT'
 if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 3; fi
 v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
 v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
-wait -n
-exit $?
+while [[ true ]]; do
+    sleep 666
+done
 EOT
 
 CMD [ "sh", "/z.sh" ]
