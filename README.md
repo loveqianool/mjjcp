@@ -30,7 +30,7 @@ docker run -dit --name mjjcp --hostname mjjcp \
 --cap-add=NET_ADMIN \
 --cap-add=SYS_MODULE \
 -v /lib/modules:/lib/modules:ro \
--v /opt/docker/wireguard:/etc/wireguard \
+-v /opt/docker/wireguard/wg0.conf:/etc/wireguard/wg0.conf \
 -p 端口:端口 -p 端口:端口/udp \
 -e nodeId=主机ID \
 -e port=端口 \
