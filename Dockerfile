@@ -8,7 +8,10 @@ env V2RAY_VMESS_AEAD_FORCED=false
 
 RUN apk add --no-cache wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat ip6tables
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-RUN wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar && chmod +x /usr/local/bin/v2scar
+RUN wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar \
+ && chmod +x /usr/local/bin/v2scar \
+ && wget https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat \
+ -O /usr/local/bin/geosite.dat
 
 RUN sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick \
  && curl https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem \
