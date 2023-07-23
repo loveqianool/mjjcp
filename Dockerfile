@@ -27,6 +27,7 @@ if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 6; fi
 
 # Start the first process
 v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
+sleep 6
 ps aux | grep v2ray | grep -q -v grep
 PROCESS_1_STATUS=$?
 echo "v2ray status..."
@@ -35,10 +36,10 @@ if [ $PROCESS_1_STATUS -ne 0 ]; then
 echo "Failed to start my_first_process: $PROCESS_1_STATUS"
 exit $PROCESS_1_STATUS
 fi
-sleep 5
 
 # Start the second process
 v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
+sleep 6
 ps aux | grep v2scar | grep -q -v grep
 PROCESS_2_STATUS=$?
 echo "v2scar status..."
