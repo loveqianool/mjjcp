@@ -26,13 +26,13 @@ RUN cat > /z.sh <<'EOT'
 if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 6; fi
 
 # Start the first process
-nohup v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
+v2ray -config=$api/api/vmess_server_config/$port/?token=$token &
 ps aux | grep v2ray | grep -q -v grep
 PROCESS_1_STATUS=$?
 echo "v2ray status..."
 echo $PROCESS_1_STATUS
 if [ $PROCESS_1_STATUS -ne 0 ]; then
-echo "Failed to start my_first_process: $PROCESS_2_STATUS"
+echo "Failed to start my_first_process: $PROCESS_1_STATUS"
 exit $PROCESS_1_STATUS
 fi
 sleep 5
@@ -41,7 +41,7 @@ sleep 5
 nohup v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
 ps aux | grep v2scar | grep -q -v grep
 PROCESS_2_STATUS=$?
-echo "thread2 status..."
+echo "v2scar status..."
 echo $PROCESS_2_STATUS
 if [ $PROCESS_2_STATUS -ne 0 ]; then
 echo "Failed to start my_second_process: $PROCESS_2_STATUS"
