@@ -38,7 +38,7 @@ fi
 sleep 5
 
 # Start the second process
-nohup v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
+v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
 ps aux | grep v2scar | grep -q -v grep
 PROCESS_2_STATUS=$?
 echo "v2scar status..."
