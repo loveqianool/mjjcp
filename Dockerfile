@@ -38,7 +38,7 @@ exit $PROCESS_1_STATUS
 fi
 
 # Start the second process
-v2scar -id=$nodeId -gp=127.0.0.1:$grpc &
+v2scar -id=$nodeId -gp=0.0.0.0:$grpc &
 sleep 6
 ps aux | grep v2scar | grep -q -v grep
 PROCESS_2_STATUS=$?
