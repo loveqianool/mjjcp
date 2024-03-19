@@ -8,7 +8,7 @@ env V2RAY_VMESS_AEAD_FORCED=false
 
 RUN apk add --no-cache wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat ip6tables tzdata
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-RUN wget https://github.com/jackma778/sh/raw/main/v2scar -O /usr/local/bin/v2scar \
+RUN wget https://github.com/jackma778/sh/releases/download/v0.1/v2scar_alpine -O /usr/local/bin/v2scar \
  && chmod +x /usr/local/bin/v2scar \
  && wget https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
  -O /usr/local/bin/geosite.dat \
@@ -38,11 +38,11 @@ exit $PROCESS_1_STATUS
 fi
 
 # Start the second process
-v2scar -id=$nodeId -gp=0.0.0.0:$grpc &
+v2scar_alpine -id=$nodeId -gp=0.0.0.0:$grpc &
 sleep 6
-ps aux | grep v2scar | grep -q -v grep
+ps aux | grep v2scar_alpine | grep -q -v grep
 PROCESS_2_STATUS=$?
-echo "v2scar status..."
+echo "v2scar_alpine status..."
 echo $PROCESS_2_STATUS
 if [ $PROCESS_2_STATUS -ne 0 ]; then
 echo "Failed to start my_second_process: $PROCESS_2_STATUS"
@@ -53,7 +53,7 @@ fi
 while sleep 60; do
 ps aux | grep v2ray | grep -q -v grep
 PROCESS_1_STATUS=$?
-ps aux | grep v2scar | grep -q -v grep
+ps aux | grep v2scar_alpine | grep -q -v grep
 PROCESS_2_STATUS=$?
 # If the greps above find anything, they exit with 0 status
 # If they are not both 0, then something is wrong
