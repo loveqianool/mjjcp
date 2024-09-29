@@ -21,6 +21,7 @@ LOCAL=''
 LOCAL_INSTALL=''
 DIST_SRC='github'
 ERROR_IF_UPTODATE=''
+API='https://api.cjy.me'
 
 CUR_VER=""
 NEW_VER="v4.45.2"
@@ -144,7 +145,7 @@ archAffix(){
         ;;
     esac
 
-	return 0
+        return 0
 }
 
 zipRoot() {
@@ -178,6 +179,14 @@ zipRoot() {
 }
 
 installSoftware(){
+    if [ "$(id -u)" -ne "0" ]; then
+        colorEcho ${RED} "使用 root 执行此脚本。" >&2
+        exit 1
+    fi
+    if [ -f /etc/systemd/system/v2scar.service ]; then
+        colorEcho ${RED} "检测到mcp已安装，如需重装请先执行卸载。"
+        exit 0
+    fi
     COMPONENT=$1
     if [[ -n `command -v $COMPONENT` ]]; then
         return 0
@@ -219,127 +228,221 @@ getPMT(){
     fi
     return 0
 }
-
-
+refreshPort(){
+    if [ ! -f /etc/systemd/system/v2scar.service ]; then
+        colorEcho ${RED} "未检测到mcp服务端，请先安装"
+        exit 0
+    fi
+    new_nodeid=`grep -oP '(?<=--nodeid=)\d+' /etc/systemd/system/v2scar.service`
+    new_token=$(grep "^$new_nodeid=" /root/.mcptoken | cut -d '=' -f 2)
+    if [ -z "$new_token" ]; then
+        colorEcho ${RED} "您的mcp服务端过旧,无法使用脚本更换端口，请先执行卸载后重新安装"
+        exit 0
+    fi
+    while true; do
+            echo "正在验证$nodeid的主机token：$new_token"
+            verify=$(curl -s "$API/api/verify_server_token?token=$new_token&id=$new_nodeid")
+            if [ "$verify" == "1" ]; then
+                    sed -i "s|^$new_nodeid=.*|$new_nodeid=$new_token|" /root/.mcptoken
+                    echo "token验证通过：$new_nodeid=$new_token"
+                    break
+            else
+                    colorEcho ${RED} "验证失败，请输入账户全局token或 输入识别ID为：$new_nodeid 的主机token ，您可以在"我的主机"页面查询到："
+                    read new_token
+            fi
+    done
+    read -p "请输入需要更换的新端口 (直接回车随机生成): " new_port
+    if [ -z "$new_port" ]; then
+            new_port=$((RANDOM % 49001 + 1000))
+    fi
+    refresh_port=$(curl -s "$API/api/refresh_server_port?token=$new_token&id=$new_nodeid&port=$new_port")
+            if [[ $refresh_port =~ ^newPort= ]]; then
+                    new_port=$(echo $refresh_port | cut -d '=' -f 2)
+                    colorEcho ${GREEN} "端口更换成功，新端口为：$new_port"
+            else
+                    colorEcho ${RED} "端口更换失败，失败原因为：$refresh_port"
+                    exit 1
+            fi
+}
 
 installV2Ray(){
-    api=https://api.cjy.me
-    token=MJJ6688
-    echo "https://share.cjy.me 添加主机信息后，再继续操作本脚本" 
-    echo "请输入主机识别ID："
-    read new_nodeid
+    colorEcho ${GREEN} "请先在网页添加主机信息后，再继续操作本脚本" 
+    while true; do
+            colorEcho ${BLUE} "请输入主机识别ID："
+            read new_nodeid
+
+            # 检查输入是否是数字
+            if [[ "$new_nodeid" =~ ^[0-9]+$ ]]; then
+                    break
+            else
+                    colorEcho ${RED} "主机识别ID是一个数字，请确认"
+            fi
+    done
+
+    if [ ! -f /root/.mcptoken ]; then
+            echo "$new_nodeid=MJJ6688" > /root/.mcptoken
+    fi
+
+
+    new_token=$(grep "^$new_nodeid=" /root/.mcptoken | cut -d '=' -f 2)
+    if [ -z "$new_token" ]; then
+            new_token="MJJ6688"
+    fi
+
+
+    while true; do
+            echo "正在验证$new_nodeid的主机token：$new_token"
+            verify=$(curl -s "$API/api/verify_server_token?token=$new_token&id=$new_nodeid")
+            if [ "$verify" == "1" ] && [ "$new_token" == "MJJ6688" ]; then
+                    refresh=$(curl -s "$API/api/refresh_server_token?token=$new_token&id=$new_nodeid")
+                    if [[ $refresh =~ newToken=([a-zA-Z0-9]+) ]]; then
+                            new_token=$(echo $refresh | cut -d '=' -f 2)
+                    else
+                            echo "$refresh"
+                            colorEcho ${RED} "刷新token失败,mcp提供的解锁功能将受限"
+                            break
+                    fi
+            elif [ "$verify" == "1" ]; then
+                    break
+            else
+                    colorEcho ${RED} "验证失败，请输入账户全局token或 输入识别ID为：$new_nodeid 的主机token ，您可以在"我的主机"页面查询到："
+                    read new_token
+            fi
+    done
+
+
+    if grep -q "^$new_nodeid=" /root/.mcptoken; then
+            sed -i "s|^$new_nodeid=.*|$new_nodeid=$new_token|" /root/.mcptoken
+    else
+            echo "$new_nodeid=$new_token" >> /root/.mcptoken
+    fi
+    token=$new_token
+    echo "token验证通过：$new_nodeid=$new_token"
+
+    # 优化内核参数 检查是否存在重复配置项
+    if ! grep -q "net.ipv4.tcp_congestion_control = bbr" /etc/sysctl.conf; then
+        echo "net.ipv4.tcp_retries2 = 8
+        net.ipv4.tcp_slow_start_after_idle = 0
+        fs.file-max = 1000000
+        net.core.default_qdisc = fq
+        net.ipv4.tcp_congestion_control = bbr
+        fs.inotify.max_user_instances = 8192
+        net.ipv4.tcp_syncookies = 1
+        net.ipv4.tcp_fin_timeout = 30
+        net.ipv4.tcp_tw_reuse = 1
+        net.ipv4.ip_local_port_range = 1024 65000
+        net.ipv4.tcp_max_syn_backlog = 16384
+        net.ipv4.tcp_max_tw_buckets = 6000
+        net.ipv4.route.gc_timeout = 100
+        net.ipv4.tcp_syn_retries = 1
+        net.ipv4.tcp_synack_retries = 1
+        net.core.somaxconn = 32768
+        net.core.netdev_max_backlog = 32768
+        net.ipv4.tcp_timestamps = 0
+        net.ipv4.tcp_max_orphans = 32768
+        net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+        sysctl -p
+    fi
+    # 优化系统参数 检查是否存在重复配置项
+    if ! grep -q "*               soft    nofile           1000000" /etc/security/limits.conf; then
+        echo "*               soft    nofile           1000000
+        *               hard    nofile          1000000" > /etc/security/limits.conf
+    fi
     
-    echo "请确认您要将主机识别ID设置为$new_nodeid(y/n)"
-    read confirm
+    # 优化系统参数 检查是否存在重复配置项
+    if ! grep -q "ulimit -SHn 1000000" /etc/profile; then
+        echo "ulimit -SHn 1000000" >> /etc/profile
+        source /etc/profile
+    fi
 
-    if [ "$confirm" == "y" ] || [ "$confirm" == "Y" ]; then
-        nodeId=$new_nodeid 
+    # Download V2ray
+    rm -rf /tmp/v2ray
+    mkdir -p /tmp/v2ray
+    colorEcho ${BLUE} "Downloading V2Ray: ${DOWNLOAD_LINK}"
+    
+    if [[ $(uname -m) == "arm"* ]]; then
+        wget --no-check-certificate -P /tmp/v2ray "https://github.com/jackma778/sh/releases/download/v0.1/v2scar_armlinux"
+        mv /tmp/v2ray/v2scar_armlinux /tmp/v2ray/v2scar
+    elif [[ $(uname -m) == "aarch64" ]]; then
+        wget --no-check-certificate -P /tmp/v2ray "https://github.com/jackma778/sh/releases/download/v0.1/v2scar_armlinux"
+        mv /tmp/v2ray/v2scar_armlinux /tmp/v2ray/v2scar
+    else
+        wget --no-check-certificate -P /tmp/v2ray "https://github.com/jackma778/sh/releases/download/v0.1/v2scar"
+    fi
+    
+    if [ $? != 0 ]; then
+        colorEcho ${RED} "Failed to download V2Ray! Please check your network or try again."
+        return 3
+    fi
 
-        # 优化内核参数 检查是否存在重复配置项
-        if ! grep -q "net.ipv4.tcp_congestion_control = bbr" /etc/sysctl.conf; then
-			echo "net.ipv4.tcp_retries2 = 8
-			net.ipv4.tcp_slow_start_after_idle = 0
-			fs.file-max = 1000000
-			net.core.default_qdisc = fq
-			net.ipv4.tcp_congestion_control = bbr
-			fs.inotify.max_user_instances = 8192
-			net.ipv4.tcp_syncookies = 1
-			net.ipv4.tcp_fin_timeout = 30
-			net.ipv4.tcp_tw_reuse = 1
-			net.ipv4.ip_local_port_range = 1024 65000
-			net.ipv4.tcp_max_syn_backlog = 16384
-			net.ipv4.tcp_max_tw_buckets = 6000
-			net.ipv4.route.gc_timeout = 100
-			net.ipv4.tcp_syn_retries = 1
-			net.ipv4.tcp_synack_retries = 1
-			net.core.somaxconn = 32768
-			net.core.netdev_max_backlog = 32768
-			net.ipv4.tcp_timestamps = 0
-			net.ipv4.tcp_max_orphans = 32768
-			net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
-            sysctl -p
-        fi
+    curl ${PROXY} -L -H "Cache-Control: no-cache" -o ${ZIPFILE} ${DOWNLOAD_LINK} 
+    if [ $? != 0 ]; then
+        colorEcho ${RED} "Failed to download V2Ray! Please check your network or try again."
+        return 3
+    fi
 
-        # 优化系统参数 检查是否存在重复配置项
-        if ! grep -q "*               soft    nofile           1000000" /etc/security/limits.conf; then
-            echo "*               soft    nofile           1000000
-            *               hard    nofile          1000000" > /etc/security/limits.conf
-        fi
-        
-        # 优化系统参数 检查是否存在重复配置项
-        if ! grep -q "ulimit -SHn 1000000" /etc/profile; then
-            echo "ulimit -SHn 1000000" >> /etc/profile
-            source /etc/profile
-        fi
+    # Install V2Ray binary to /usr/bin/v2ray
+    mkdir -p '/etc/v2ray' '/var/log/v2ray' && unzip -oj "$1" "$2v2ray" "$2v2ctl" "$2geoip.dat" "$2geosite.dat" -d '/usr/bin/v2ray' && mv /tmp/v2ray/v2scar /usr/bin/v2ray/ && chmod +x '/usr/bin/v2ray/v2scar' '/usr/bin/v2ray/v2ray' '/usr/bin/v2ray/v2ctl' || {
+        colorEcho ${RED} "Failed to copy V2Ray binary and resources."
+        return 1
+    }
 
-        # Download V2ray
-        rm -rf /tmp/v2ray
-        mkdir -p /tmp/v2ray
-        colorEcho ${BLUE} "Downloading V2Ray: ${DOWNLOAD_LINK}"
-        
-        if [[ $(uname -m) == "arm"* ]]; then
-            wget --no-check-certificate -P /tmp/v2ray "https://github.com/jackma778/sh/releases/download/v0.1/v2scar_armlinux"
-            mv /tmp/v2ray/v2scar_armlinux /tmp/v2ray/v2scar
-        elif [[ $(uname -m) == "aarch64" ]]; then
-            wget --no-check-certificate -P /tmp/v2ray "https://github.com/jackma778/sh/releases/download/v0.1/v2scar_armlinux"
-            mv /tmp/v2ray/v2scar_armlinux /tmp/v2ray/v2scar
-        else
-            wget --no-check-certificate -P /tmp/v2ray "https://github.com/jackma778/sh/releases/download/v0.1/v2scar"
-        fi
-        
-        if [ $? != 0 ]; then
-            colorEcho ${RED} "Failed to download V2Ray! Please check your network or try again."
-            return 3
-        fi
+    # Install V2Ray.service and v2scar.service
+    if [[ -n "${SYSTEMCTL_CMD}" ]]; then
+        cat <<EOF > /etc/systemd/system/v2ray.service
+[Unit]
+Description=V2Ray Service
+Documentation=https://www.v2fly.org/
+After=network.target nss-lookup.target
+Requires=v2scar.service
+BindsTo=v2scar.service
 
-        curl ${PROXY} -L -H "Cache-Control: no-cache" -o ${ZIPFILE} ${DOWNLOAD_LINK} 
-        if [ $? != 0 ]; then
-            colorEcho ${RED} "Failed to download V2Ray! Please check your network or try again."
-            return 3
-        fi
+[Service]
+User=root
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=/usr/bin/v2ray/v2ray -config $API/api/get_server_config?token=$new_token&id=$new_nodeid&docker=0
+Restart=always
+RestartSec=60s
 
-        # Install V2Ray binary to /usr/bin/v2ray
-        mkdir -p '/etc/v2ray' '/var/log/v2ray' && unzip -oj "$1" "$2v2ray" "$2v2ctl" "$2geoip.dat" "$2geosite.dat" -d '/usr/bin/v2ray' && mv /tmp/v2ray/v2scar /usr/bin/v2ray/ && chmod +x '/usr/bin/v2ray/v2scar' '/usr/bin/v2ray/v2ray' '/usr/bin/v2ray/v2ctl' || {
-            colorEcho ${RED} "Failed to copy V2Ray binary and resources."
-            return 1
-        }
-
-        # Install V2Ray.service and v2scar.service
-        if [[ -n "${SYSTEMCTL_CMD}" ]]; then
-            unzip -oj "$1" "$2systemd/system/v2ray.service" -d '/etc/systemd/system' && sed -i "s@ExecStart=.*@ExecStart=/usr/bin/v2ray/v2ray -config $api/api/vmess_server_config/$nodeId/?token=$token@" /etc/systemd/system/v2ray.service
-
-            cat <<EOF > /etc/systemd/system/v2scar.service
+[Install]
+WantedBy=multi-user.target
+EOF
+        cat <<EOF > /etc/systemd/system/v2scar.service
 [Unit]
 Description=v2scar
+After=v2ray.service
+Requires=v2ray.service
+BindsTo=v2ray.service
+
 [Service]
-ExecStart=/usr/bin/v2ray/v2scar --nodeid=$nodeId
+ExecStart=/usr/bin/v2ray/v2scar --nodeid=$new_nodeid
 Restart=always
+RestartSec=60s
 User=root
 [Install]
 WantedBy=multi-user.target
 EOF
 
-            systemctl daemon-reload
-            systemctl enable v2ray.service
-            systemctl enable v2scar.service
-            colorEcho ${GREEN} "Install successfully."
-            if crontab -l | grep -q "v2scar"; then
-                echo "pass"
-            else
-                echo "add crontab"
-                minute=$(shuf -i 0-59 -n 1)
-                hour=$(shuf -i 0-23 -n 1)
-                weekday=$(shuf -i 0-6 -n 1)
-                (crontab -l ; echo "$minute $hour * * $weekday systemctl restart v2ray && systemctl restart v2scar") | crontab -
-            fi
+        systemctl daemon-reload
+        systemctl enable v2ray.service
+        systemctl enable v2scar.service
+        colorEcho ${GREEN} "Install successfully."
+        if crontab -l |grep -v docker| grep -q "v2scar"; then
+            echo "pass"
         else
-            colorEcho ${RED} "Failed to remove V2Ray, Try use debian10 64"
-            return 2
+            echo "add crontab"
+            minute=$(shuf -i 0-59 -n 1)
+            hour=$(shuf -i 0-23 -n 1)
+            weekday=$(shuf -i 0-6 -n 1)
+            (crontab -l ; echo "$minute $hour * * $weekday systemctl restart v2ray && systemctl restart v2scar") | crontab -
         fi
     else
-        colorEcho ${RED} "Cancel Install."
-	exit 0
+        colorEcho ${RED} "Failed to remove V2Ray, Try use debian10 64"
+        return 2
     fi
+
 }
 
 stopV2ray(){
@@ -353,14 +456,33 @@ stopV2ray(){
 }
 
 restartV2ray(){
+    colorEcho ${BLUE} "Stop V2Ray service."
+    systemctl stop v2ray.service && systemctl stop v2scar.service && colorEcho ${GREEN} "OK" || colorEcho ${RED} "FAILED"
+    sleep 1
     colorEcho ${BLUE} "Starting up V2Ray service."
-	${SYSTEMCTL_CMD} restart v2ray && ${SYSTEMCTL_CMD} restart v2scar
-    if [[ $? -ne 0 ]]; then
-        colorEcho ${YELLOW} "Failed to start V2Ray service."
-        return 2
+    ntpdate time.windows.com && hwclock -w
+    systemctl start v2ray.service && systemctl start v2scar.service
+    sleep 3
+    ps -ef | grep v2ray| grep get_server_config
+    if [ $? -eq 0 ];then
+        colorEcho ${GREEN} "OK" 
+    else
+        showLog
+        colorEcho ${RED} "FAILED"
     fi
-    return 0
 }
+
+showLog(){
+    echo "======================================================================================================"
+    echo "v2scar日志如下"
+    journalctl -u v2scar.service -n 20 --no-pager
+    echo "======================================================================================================"
+    echo "v2ray日志如下"
+    journalctl -u v2ray.service -n 25 --no-pager
+    echo "======================================================================================================"
+}
+
+
 
 remove(){
         systemctl stop v2ray.service
@@ -375,22 +497,22 @@ remove(){
             colorEcho ${GREEN} "Removed V2Ray successfully."
             colorEcho ${BLUE} "If necessary, please remove configuration file and log file manually."
             return 0
-	fi
+        fi
 }
 
 update_geo(){
-	DAT_PATH="/usr/bin/v2ray"
-	DOWNLOAD_LINK_GEOIP="https://github.com/v2fly/geoip/releases/latest/download/geoip.dat"
-	DOWNLOAD_LINK_GEOSITE="https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
-	wget --no-check-certificate -O "${DAT_PATH}/geoip.dat" "${DOWNLOAD_LINK_GEOIP}"
-	wget --no-check-certificate -O "${DAT_PATH}/geosite.dat" "${DOWNLOAD_LINK_GEOSITE}"
-	chmod 644 "${DAT_PATH}"/*.dat
+        DAT_PATH="/usr/bin/v2ray"
+        DOWNLOAD_LINK_GEOIP="https://github.com/v2fly/geoip/releases/latest/download/geoip.dat"
+        DOWNLOAD_LINK_GEOSITE="https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
+        wget --no-check-certificate -O "${DAT_PATH}/geoip.dat" "${DOWNLOAD_LINK_GEOIP}"
+        wget --no-check-certificate -O "${DAT_PATH}/geosite.dat" "${DOWNLOAD_LINK_GEOSITE}"
+        chmod 644 "${DAT_PATH}"/*.dat
 }
 
 
 
-echo && echo -e " 分享小鸡@share_life_mjj ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
-  -- v0.3 2024.5.20 -- 
+echo && echo -e " 分享小鸡@mjjcloudplatform ${Red_font_prefix}[v0.5]${Font_color_suffix}
+  -- v0.5 2024.9.3 -- 
   
   
 ————————————
@@ -399,36 +521,47 @@ echo && echo -e " 分享小鸡@share_life_mjj ${Red_font_prefix}[v${sh_ver}]${Fo
 ————————————
  ${Green_font_prefix}2.${Font_color_suffix} 启动/重启
  ${Green_font_prefix}3.${Font_color_suffix} 停止
+ ${Green_font_prefix}4.${Font_color_suffix} 查看日志
 ————————————
- ${Green_font_prefix}4.${Font_color_suffix} 卸载
+ ${Green_font_prefix}9.${Font_color_suffix} 更换端口
+————————————
+ ${Green_font_prefix}88.${Font_color_suffix} 卸载
 ————————————
 " && echo
 read -e -p " 请输入数字:" num
 case "$num" in
         0)
-	installSoftware curl
-	installSoftware wget
-	installSoftware unzip
-	installSoftware ca-certificates
-	installV2Ray "${ZIPFILE}" "${ZIPROOT}" || return $?
-	update_geo
- 	restartV2ray
+        installSoftware curl
+        installSoftware wget
+        installSoftware unzip
+        installSoftware ca-certificates
+        installSoftware ntpdate
+        installV2Ray "${ZIPFILE}" "${ZIPROOT}" || return $?
+        update_geo
+        restartV2ray
         ;;
         1)
-	stopV2ray
- 	update_geo
-	restartV2ray
+        stopV2ray
+        update_geo
+        restartV2ray
         ;;
         2)
-	restartV2ray
+        restartV2ray
         ;;
         3)
-	stopV2ray
+        stopV2ray
         ;;
         4)
-	remove
-	    ;;
+        showLog
+        ;;
+        9)
+        refreshPort
+        restartV2ray
+        ;;
+        88)
+        remove
+            ;;
         *)
-	echo "请输入正确数字 [0-4]"
-	;;
+        echo "请输入正确数字 [0-4]"
+        ;;
 esac
