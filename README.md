@@ -32,7 +32,7 @@ docker run -dit --name mjjcp --hostname mjjcp \
 -v /lib/modules:/lib/modules:ro \
 -v /opt/docker/wireguard/wg0.conf:/etc/wireguard/wg0.conf \
 -p 端口:端口 -p 端口:端口/udp \
--e nodeId=主机ID \
--e port=端口 \
+-e NODE_ID=主机ID \
+-e PORT=端口 \
 ghcr.io/loveqianool/mjjcp
 ```
