@@ -1,9 +1,9 @@
 FROM alpine
-env api=https://api.cjy.me
-env token=MJJ6688
-env nodeId=
-env port=
-env grpc=8079
+env API_SITE=https://api.cjy.me
+env TOKEN=MJJ6688
+env NODE_ID=
+env PORT=
+env GRPC_PORT=8079
 env V2RAY_VMESS_AEAD_FORCED=false
 
 RUN apk add --no-cache wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat ip6tables tzdata
@@ -25,40 +25,35 @@ RUN cat > /z.sh <<'EOT'
 #!/bin/bash
 if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 6; fi
 
-# Start the first process
-v2ray "-config=$api/api/get_server_config?id=$nodeId&token=$token" &
+v2ray "-config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
 sleep 6
 ps aux | grep v2ray | grep -q -v grep
-PROCESS_1_STATUS=$?
+v2ray_STATUS=$?
 echo "v2ray status..."
-echo $PROCESS_1_STATUS
-if [ $PROCESS_1_STATUS -ne 0 ]; then
-echo "Failed to start my_first_process: $PROCESS_1_STATUS"
-exit $PROCESS_1_STATUS
+echo $v2ray_STATUS
+if [ $v2ray_STATUS -ne 0 ]; then
+echo "v2ray 启动失败: $v2ray_STATUS"
+exit $v2ray_STATUS
 fi
 
-# Start the second process
-v2scar_alpine -id=$nodeId -gp=localhost:$grpc &
+v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
 sleep 6
 ps aux | grep v2scar_alpine | grep -q -v grep
-PROCESS_2_STATUS=$?
-echo "v2scar_alpine status..."
-echo $PROCESS_2_STATUS
-if [ $PROCESS_2_STATUS -ne 0 ]; then
-echo "Failed to start my_second_process: $PROCESS_2_STATUS"
-exit $PROCESS_2_STATUS
+v2scar_STATUS=$?
+echo "v2scar status..."
+echo $v2scar_STATUS
+if [ $v2scar_STATUS -ne 0 ]; then
+echo "v2scar 启动失败: $v2scar_STATUS"
+exit $v2scar_STATUS
 fi
 
-# 每隔60秒检查进程是否运行
 while sleep 60; do
 ps aux | grep v2ray | grep -q -v grep
-PROCESS_1_STATUS=$?
+v2ray_STATUS=$?
 ps aux | grep v2scar_alpine | grep -q -v grep
-PROCESS_2_STATUS=$?
-# If the greps above find anything, they exit with 0 status
-# If they are not both 0, then something is wrong
-if [ $PROCESS_1_STATUS -ne 0 -o $PROCESS_2_STATUS -ne 0 ]; then
-echo "One of the processes has already exited."
+v2scar_STATUS=$?
+if [ $v2ray_STATUS -ne 0 -o $v2scar_STATUS -ne 0 ]; then
+echo "启动失败."
 exit 1
 fi
 done
