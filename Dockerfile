@@ -41,7 +41,7 @@ fi
 echo "v2ray 启动成功..."
 
 # 启动 v2scar_alpine
-v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
+v2scar_alpine "-id=$NODE_ID -gp=localhost:$GRPC_PORT" &
 echo "v2scar 启动中..."
 sleep 6
 
