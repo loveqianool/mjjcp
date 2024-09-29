@@ -29,7 +29,7 @@ if [ -f "/etc/wireguard/wg0.conf" ]; then
 fi
 
 # 启动 v2ray
-v2ray -config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN &
+v2ray "-config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
 echo "v2ray 启动中..."
 sleep 6
 
@@ -41,7 +41,7 @@ fi
 echo "v2ray 启动成功..."
 
 # 启动 v2scar_alpine
-v2scar_alpine "-id=$NODE_ID -gp=localhost:$GRPC_PORT" &
+v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
 echo "v2scar 启动中..."
 sleep 6
 
