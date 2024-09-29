@@ -8,7 +8,7 @@ env V2RAY_VMESS_AEAD_FORCED=false
 
 RUN apk add --no-cache wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat ip6tables tzdata
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-RUN wget https://github.com/jackma778/sh/releases/download/v0.1/v2scar_alpine -O /usr/local/bin/v2scar_alpine \
+RUN wget https://github.com/jackma778/sh/raw/refs/heads/main/v2scar_alpine -O /usr/local/bin/v2scar_alpine \
  && chmod +x /usr/local/bin/v2scar_alpine \
  && wget https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
  -O /usr/local/bin/geosite.dat \
