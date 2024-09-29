@@ -26,7 +26,7 @@ RUN cat > /z.sh <<'EOT'
 if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 6; fi
 
 # Start the first process
-v2ray -config=$api/api/get_server_config?id=$nodeId&token=$token &
+v2ray "-config=$api/api/get_server_config?id=$nodeId&token=$token" &
 sleep 6
 ps aux | grep v2ray | grep -q -v grep
 PROCESS_1_STATUS=$?
