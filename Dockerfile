@@ -22,41 +22,49 @@ RUN sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting
  && update-ca-certificates
 
 RUN cat > /z.sh <<'EOT'
-#!/bin/bash
-if [ -f "/etc/wireguard/wg0.conf" ]; then wg-quick up wg0 && sleep 6; fi
+#!/bin/sh
+# 启动 WireGuard（如果配置文件存在）
+if [ -f "/etc/wireguard/wg0.conf" ]; then
+    wg-quick up wg0 && sleep 6
+fi
 
+# 启动 v2ray
 v2ray "-config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
+echo "v2ray 启动中..."
 sleep 6
-ps aux | grep v2ray | grep -q -v grep
-v2ray_STATUS=$?
-echo "v2ray status..."
-echo $v2ray_STATUS
-if [ $v2ray_STATUS -ne 0 ]; then
-echo "v2ray 启动失败: $v2ray_STATUS"
-exit $v2ray_STATUS
-fi
 
+# 检查 v2ray 是否启动成功
+if ! pgrep -x "v2ray" > /dev/null; then
+    echo "v2ray 启动失败..."
+    exit 1
+fi
+echo "v2ray 启动成功..."
+
+# 启动 v2scar_alpine
 v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
+echo "v2scar 启动中..."
 sleep 6
-ps aux | grep v2scar_alpine | grep -q -v grep
-v2scar_STATUS=$?
-echo "v2scar status..."
-echo $v2scar_STATUS
-if [ $v2scar_STATUS -ne 0 ]; then
-echo "v2scar 启动失败: $v2scar_STATUS"
-exit $v2scar_STATUS
-fi
 
-while sleep 60; do
-ps aux | grep v2ray | grep -q -v grep
-v2ray_STATUS=$?
-ps aux | grep v2scar_alpine | grep -q -v grep
-v2scar_STATUS=$?
-if [ $v2ray_STATUS -ne 0 -o $v2scar_STATUS -ne 0 ]; then
-echo "启动失败."
-exit 1
+# 检查 v2scar_alpine 是否启动成功
+if ! pgrep -x "v2scar_alpine" > /dev/null; then
+    echo "v2scar 启动失败..."
+    exit 1
 fi
+echo "v2scar 启动成功..."
+
+# 每隔 60 秒检查一次 v2ray 和 v2scar_alpine 是否还在运行
+while sleep 60; do
+    if ! pgrep -x "v2ray" > /dev/null; then
+        echo "v2ray 已退出，服务停止..."
+        exit 1
+    fi
+    
+    if ! pgrep -x "v2scar_alpine" > /dev/null; then
+        echo "v2scar_alpine 已退出，服务停止..."
+        exit 1
+    fi
 done
+
 EOT
 
 CMD [ "sh", "/z.sh" ]
