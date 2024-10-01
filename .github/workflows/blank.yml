@@ -47,7 +47,7 @@ jobs:
           DSLIM_HTTP_PROBE: false
         with:
           overwrite: true
-          target: ${{ github.repository }}:latest
+          target: ghcr.io/${{ github.repository }}:latest
           tag: "slim"
           
       - run: docker image push "ghcr.io/${{ github.repository }}" --all-tags
