@@ -46,7 +46,7 @@ jobs:
         env:
           DSLIM_HTTP_PROBE: false
         with:
-          overwrite: ture
+          overwrite: true
           target: ${{ github.repository }}:latest
           tag: "slim"
           
