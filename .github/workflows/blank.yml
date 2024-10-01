@@ -37,7 +37,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
-          push: false
+          push: true
           tags: ghcr.io/${{ github.repository }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -49,4 +49,4 @@ jobs:
           target: ghcr.io/${{ github.repository }}:latest
           tag: "slim"
           
-      - run: docker image push "ghcr.io/${{ github.repository }}" --all-tags
+      - run: docker image push "ghcr.io/${{ github.repository }}:slim"
