@@ -26,42 +26,47 @@ RUN cat > /z.sh <<'EOT'
 
 # 启动 WireGuard（如果配置文件存在）
 if [ -f "/etc/wireguard/wg0.conf" ]; then
-    wg-quick up wg0 && sleep 3
+    echo "$(date): 发现 WireGuard 配置文件..."
+    echo "$(date): 启动 WireGuard..."
+    wg-quick up wg0
+    sleep 3
 fi
 
 # 启动 v2ray
 v2ray "-config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
-echo "v2ray 启动中..."
+echo "$(date): v2ray 启动中..."
 sleep 3
 
 # 检查 v2ray 是否启动成功
 if ! pgrep -x "v2ray" > /dev/null; then
-    echo "v2ray 启动失败..."
+    echo "$(date): v2ray 启动失败..."
     exit 1
 fi
-echo "v2ray 启动成功..."
+echo "$(date): v2ray 启动成功..."
 
 # 启动 v2scar_alpine
 v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
-echo "v2scar 启动中..."
+echo "$(date): v2scar 启动中..."
 sleep 3
 
 # 检查 v2scar_alpine 是否启动成功
 if ! pgrep -x "v2scar_alpine" > /dev/null; then
-    echo "v2scar 启动失败..."
+    echo "$(date): v2scar 启动失败..."
     exit 1
 fi
-echo "v2scar 启动成功..."
+echo "$(date): v2scar 启动成功..."
+
+echo "$(date): 正常运行中..."
 
 # 每隔 60 秒检查一次 v2ray 和 v2scar_alpine 是否还在运行
 while sleep 60; do
     if ! pgrep -x "v2ray" > /dev/null; then
-        echo "v2ray 已退出，服务停止..."
+        echo "$(date): v2ray 服务停止...正在重启"
         exit 1
     fi
     
     if ! pgrep -x "v2scar_alpine" > /dev/null; then
-        echo "v2scar_alpine 已退出，服务停止..."
+        echo "$(date): v2scar_alpine 服务停止...正在重启"
         exit 1
     fi
 done
