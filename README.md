@@ -10,7 +10,8 @@ docker run -dit --name mjjcp --hostname mjjcp \
 ghcr.io/loveqianool/mjjcp
 ```
 
-有 warp 的 wireguard 配置文件可以映射到 /etc/wireguard/wg0.conf，会自动启用。
+启用 warp 出口。
+将下面的 /opt/docker/wireguard/wg0.conf，改成你的 wireguard 配置文件。
 ```
 docker run -dit --name mjjcp --hostname mjjcp \
 --restart=unless-stopped \
