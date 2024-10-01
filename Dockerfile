@@ -14,8 +14,8 @@ RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv 
  chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem && \
  update-ca-certificates
 
-RUN curl https://github.com/jackma778/sh/raw/refs/heads/main/v2scar_alpine \
- -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
+RUN wget https://github.com/jackma778/sh/raw/refs/heads/main/v2scar_alpine \
+ -O /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
 curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
  -o /usr/local/bin/geosite.dat && \
 curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
