@@ -8,7 +8,7 @@ env V2RAY_VMESS_AEAD_FORCED=false
 
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
 
-RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates nano openresolv gcompat ip6tables tzdata && \
+RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv gcompat ip6tables tzdata && \
  sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick && \
  curl https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem -o /usr/local/share/ca-certificates/Cloudflare_CA.pem && \
  chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem && \
