@@ -42,7 +42,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           
-      - uses: kitabisa/docker-slim-action@v1
+      - uses: kitabisa/docker-slim-action@master
         env:
           DSLIM_HTTP_PROBE: false
         with:
