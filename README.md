@@ -7,7 +7,7 @@ docker run -dit --name mjjcp --hostname mjjcp \
 -e NODE_ID=主机识别ID \
 -e PORT=端口 \
 -p 端口:端口 -p 端口:端口/udp \
-ghcr.io/loveqianool/mjjcp
+ghcr.io/loveqianool/mjjcp:slim
 ```
 
 启用 warp 出口。
