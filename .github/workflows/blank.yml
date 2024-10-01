@@ -45,11 +45,10 @@ jobs:
       - uses: kitabisa/docker-slim-action@master
         env:
           DSLIM_HTTP_PROBE: false
+          DSLIM_INCLUDE_PATH: /usr/local/bin
+          DSLIM_INCLUDE_EXE: wg-quick
         with:
           target: ghcr.io/${{ github.repository }}:latest
           tag: "slim"
-          keep-path: |
-                    /usr/local/share/ca-certificates
-                    /usr/local/bin
 
       - run: docker image push "ghcr.io/${{ github.repository }}:slim"
