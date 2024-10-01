@@ -6,24 +6,26 @@ env PORT=
 env GRPC_PORT=8079
 env V2RAY_VMESS_AEAD_FORCED=false
 
-RUN apk add --no-cache wireguard-tools curl wget iproute2 ca-certificates nano openresolv gcompat ip6tables tzdata
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-RUN wget https://github.com/jackma778/sh/raw/refs/heads/main/v2scar_alpine -O /usr/local/bin/v2scar_alpine \
- && chmod +x /usr/local/bin/v2scar_alpine
+
+RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates nano openresolv gcompat ip6tables tzdata
+
+RUN curl https://github.com/jackma778/sh/raw/refs/heads/main/v2scar_alpine \
+ -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
+curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
+ -o /usr/local/bin/geosite.dat && \
+curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
+ -o /usr/local/bin/geoip.dat
  
 RUN sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick \
  && curl https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem \
- -o /usr/local/share/ca-certificates/Cloudflare_CA.pem \
- && chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem \
+ -o /usr/local/share/ca-certificates/Cloudflare_CA.pem && chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem \
  && update-ca-certificates
 
 RUN cat > /z.sh <<'EOT'
 #!/bin/sh
 
-wget https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
- -O /usr/local/bin/geosite.dat && \
-wget https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
- -O /usr/local/bin/geoip.dat
+
 
 # 启动 WireGuard（如果配置文件存在）
 if [ -f "/etc/wireguard/wg0.conf" ]; then
