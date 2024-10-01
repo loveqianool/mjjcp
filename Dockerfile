@@ -26,13 +26,13 @@ RUN cat > /z.sh <<'EOT'
 
 # 启动 WireGuard（如果配置文件存在）
 if [ -f "/etc/wireguard/wg0.conf" ]; then
-    wg-quick up wg0 && sleep 6
+    wg-quick up wg0 && sleep 3
 fi
 
 # 启动 v2ray
 v2ray "-config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
 echo "v2ray 启动中..."
-sleep 6
+sleep 3
 
 # 检查 v2ray 是否启动成功
 if ! pgrep -x "v2ray" > /dev/null; then
@@ -44,7 +44,7 @@ echo "v2ray 启动成功..."
 # 启动 v2scar_alpine
 v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
 echo "v2scar 启动中..."
-sleep 6
+sleep 3
 
 # 检查 v2scar_alpine 是否启动成功
 if ! pgrep -x "v2scar_alpine" > /dev/null; then
