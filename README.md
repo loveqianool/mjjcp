@@ -1,5 +1,6 @@
 # mjjcp
 
+将识别ID和端口放进去直接运行。
 ```
 docker run -dit --name mjjcp --hostname mjjcp \
 --restart=unless-stopped \
@@ -10,8 +11,17 @@ docker run -dit --name mjjcp --hostname mjjcp \
 ghcr.io/loveqianool/mjjcp:slim
 ```
 
-启用 warp 出口。
-将下面的 /opt/docker/wireguard/wg0.conf，改成你的 wireguard 配置文件。
+查看运行日志
+```
+docker logs mjjcp
+```
+
+结束运行
+```
+docker rm -fv mjjcp
+```
+
+要启用 warp 出口，将下面的 /opt/docker/wireguard/wg0.conf，改成你的 wireguard 配置文件。
 ```
 docker run -dit --name mjjcp --hostname mjjcp \
 --restart=unless-stopped \
