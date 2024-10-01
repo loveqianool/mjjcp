@@ -37,7 +37,17 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
-          push: true
+          push: false
           tags: ghcr.io/${{ github.repository }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          
+      - uses: kitabisa/docker-slim-action@v1
+        env:
+          DSLIM_HTTP_PROBE: false
+        with:
+          overwrite: ture
+          target: ${{ github.repository }}:latest
+          tag: "slim"
+          
+      - run: docker image push "ghcr.io/${{ github.repository }}" --all-tags
