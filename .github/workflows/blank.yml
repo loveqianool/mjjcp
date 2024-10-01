@@ -46,7 +46,6 @@ jobs:
         env:
           DSLIM_HTTP_PROBE: false
         with:
-          overwrite: true
           target: ghcr.io/${{ github.repository }}:latest
           tag: "slim"
           
