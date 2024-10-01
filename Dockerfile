@@ -22,7 +22,7 @@ RUN cat > /z.sh <<'EOT'
 
 wget https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
  -O /usr/local/bin/geosite.dat && \
- wget https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
+wget https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
  -O /usr/local/bin/geoip.dat
 
 # 启动 WireGuard（如果配置文件存在）
