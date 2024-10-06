@@ -8,7 +8,7 @@ env RELAY_NODE_ID=
 env V2RAY_VMESS_AEAD_FORCED=false
 
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-COPY --from=ehco1996/ehco /bin/echo /usr/bin/ehco
+COPY --from=ehco1996/ehco /bin/ehco /usr/bin/ehco
 
 RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv gcompat ip6tables tzdata && \
  sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick && \
@@ -32,6 +32,11 @@ if [ -f "/etc/wireguard/wg0.conf" ]; then
     echo "$(date): 启动 WireGuard..."
     wg-quick up wg0
     sleep 3
+fi
+
+if [ "$RELAY_NODE_ID" =~ ^[0-9]+$ ]; then
+    echo "启动 relay..."
+    ehco "-c $RELAY_NODE_ID" &
 fi
 
 # 启动 v2ray
