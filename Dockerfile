@@ -50,44 +50,33 @@ v2ray "-config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
 echo "$(date): v2ray 启动中..."
 sleep 3
 
-# 检查 v2ray 是否启动成功
-if ! pgrep -x "v2ray" > /dev/null; then
-    echo "$(date): v2ray 启动失败..."
-    exit 1
-fi
-echo "$(date): v2ray 启动成功..."
-
 # 启动 v2scar_alpine
 v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
 echo "$(date): v2scar 启动中..."
 sleep 3
 
-# 检查 v2scar_alpine 是否启动成功
-if ! pgrep -x "v2scar_alpine" > /dev/null; then
-    echo "$(date): v2scar 启动失败..."
-    exit 1
-fi
-echo "$(date): v2scar 启动成功..."
-
-echo "$(date): 正常运行中..."
-
 # 每隔 60 秒检查是否还在运行
-while sleep 60; do
+while true; do
     if [ -n "$RELAY_NODE_ID" ]; then
         if ! pgrep -x "ehco" > /dev/null; then
             echo "$(date): ehco relay 服务停止...正在重启"
             exit 1
         fi
     fi
+    
     if ! pgrep -x "v2ray" > /dev/null; then
         echo "$(date): v2ray 服务停止...正在重启"
         exit 1
     fi
+    
     if ! pgrep -x "v2scar_alpine" > /dev/null; then
         echo "$(date): v2scar_alpine 服务停止...正在重启"
         exit 1
     fi
+    
+    sleep 60
 done
+
 EOT
 
 CMD ["sh", "/z.sh"]
