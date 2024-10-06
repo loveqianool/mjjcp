@@ -1,33 +1,7 @@
 FROM alpine:edge
 
 # 设置环境变量
-env API_SITE=https://api.cjy.me
-env TOKEN=MJJ6688
-env NODE_ID=env
-env PORT=env
-env GRPC_PORT=8079
-env RELAY_NODE_ID=env
-env V2RAY_VMESS_AEAD_FORCED=false
-
-# 复制必要的文件
-COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
-COPY --from=ehco1996/ehco /bin/ehco /usr/local/bin/ehco
-
-# 安装必要的工具和证书
-RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv gcompat ip6tables tzdata && \
-    sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick && \
-    curl https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem -o /usr/local/share/ca-certificates/Cloudflare_CA.pem && \
-    chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem && \
-    update-ca-certificates
-
-# 下载 v2scar_alpine 和 geosite, geoip 数据
-RUN curl https://raw.githubusercontent.com/jackma778/sh/main/v2scar_alpine \
-    -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
-    curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
-FROM alpine:edge
-
-# 设置环境变量
-env API_SITE=https://api.cjy.me
+env SITE=https://api.cjy.me
 env TOKEN=MJJ6688
 env NODE_ID=
 env PORT=
@@ -72,7 +46,7 @@ if echo "$RELAY_NODE_ID" | grep -qE '^[0-9]+$'; then
 fi
 
 # 启动 v2ray
-v2ray "-config=$API_SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
+v2ray "-config=$SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
 echo "$(date): v2ray 启动中..."
 sleep 3
 
