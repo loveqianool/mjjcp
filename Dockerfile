@@ -24,6 +24,32 @@ RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv 
 RUN curl https://raw.githubusercontent.com/jackma778/sh/main/v2scar_alpine \
     -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
     curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
+FROM alpine:edge
+
+# 设置环境变量
+env API_SITE=https://api.cjy.me
+env TOKEN=MJJ6688
+env NODE_ID=
+env PORT=
+env GRPC_PORT=8079
+env RELAY_NODE_ID=
+env V2RAY_VMESS_AEAD_FORCED=false
+
+# 复制必要的文件
+COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
+COPY --from=ehco1996/ehco /bin/ehco /usr/local/bin/ehco
+
+# 安装必要的工具和证书
+RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv gcompat ip6tables tzdata && \
+    sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick && \
+    curl https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem -o /usr/local/share/ca-certificates/Cloudflare_CA.pem && \
+    chmod 644 /usr/local/share/ca-certificates/Cloudflare_CA.pem && \
+    update-ca-certificates
+
+# 下载 v2scar_alpine 和 geosite, geoip 数据
+RUN curl https://raw.githubusercontent.com/jackma778/sh/main/v2scar_alpine \
+    -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
+    curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
     -o /usr/local/bin/geosite.dat && \
     curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
     -o /usr/local/bin/geoip.dat
@@ -40,7 +66,7 @@ if [ -f "/etc/wireguard/wg0.conf" ]; then
 fi
 
 # 启动 ehco relay
-if [[ "$RELAY_NODE_ID" =~ ^[0-9]+$ ]]; then
+if echo "$RELAY_NODE_ID" | grep -qE '^[0-9]+$'; then
     echo "$(date): 启动 ehco relay..."
     ehco "-c $RELAY_NODE_ID" &
 fi
@@ -68,7 +94,7 @@ while true; do
         echo "$(date): v2ray 服务停止...正在重启"
         exit 1
     fi
-    
+
     if ! pgrep -x "v2scar_alpine" > /dev/null; then
         echo "$(date): v2scar_alpine 服务停止...正在重启"
         exit 1
@@ -76,7 +102,6 @@ while true; do
     
     sleep 60
 done
-
 EOT
 
 CMD ["sh", "/z.sh"]
