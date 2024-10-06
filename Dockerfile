@@ -4,9 +4,11 @@ env TOKEN=MJJ6688
 env NODE_ID=
 env PORT=
 env GRPC_PORT=8079
+env RELAY_NODE_ID=
 env V2RAY_VMESS_AEAD_FORCED=false
 
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
+COPY --from=ehco1996/ehco /bin/echo /usr/bin/ehco
 
 RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv gcompat ip6tables tzdata && \
  sed -i "s:sysctl -q net.ipv4.conf.all.src_valid_mark=1:echo Skipping setting net.ipv4.conf.all.src_valid_mark:" /usr/bin/wg-quick && \
