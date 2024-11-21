@@ -51,7 +51,7 @@ echo "$(date): v2ray 启动中..."
 sleep 3
 
 # 启动 v2scar_alpine
-v2scar_alpine -id=$NODE_ID -gp=localhost:$GRPC_PORT &
+v2scar_alpine -id=$NODE_ID -gp=127.0.0.1:$GRPC_PORT &
 echo "$(date): v2scar 启动中..."
 sleep 3
 
