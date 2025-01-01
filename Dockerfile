@@ -53,7 +53,7 @@ fi
 
 # 启动 v2ray
 if [ -f "/etc/xray/config.json" ]; then
-xray &
+xray -confdir /etc/xray/ &
 sleep 3
 else
 v2ray "-config=$SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
