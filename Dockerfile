@@ -8,9 +8,12 @@ env PORT=
 env GRPC_PORT=8079
 env RELAY_NODE_ID=
 env V2RAY_VMESS_AEAD_FORCED=false
+env CONFIG=
+
 
 # 复制必要的文件
 COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
+COPY --from=ghcr.io/xtls/xray-core /usr/bin/xray /usr/local/bin/xray
 COPY --from=ehco1996/ehco /bin/ehco /usr/local/bin/ehco
 
 # 安装必要的工具和证书
@@ -21,12 +24,17 @@ RUN apk add --no-cache wireguard-tools curl iproute2 ca-certificates openresolv 
     update-ca-certificates
 
 # 下载 v2scar_alpine 和 geosite, geoip 数据
-RUN curl https://raw.githubusercontent.com/jackma778/sh/main/v2scar_alpine \
-    -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
+RUN if [ "$(arch)" = "aarch64" ]; then ARCH=linuxarm64; else ARCH=linux64; fi && \
+    curl -sL \
+      $(curl -s https://api.github.com/repos/jackma778/shx/releases | grep browser_download_url | cut -d '"' -f 4 | grep -m 1 v2scar_$ARCH) \
+      -o /usr/local/bin/v2scar && \
+      chmod +x /usr/local/bin/v2scar && \
+    curl https://raw.githubusercontent.com/jackma778/sh/main/v2scar_alpine \
+      -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
     curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
-    -o /usr/local/bin/geosite.dat && \
+      -o /usr/local/bin/geosite.dat && \
     curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
-    -o /usr/local/bin/geoip.dat
+      -o /usr/local/bin/geoip.dat
 
 # 创建启动脚本
 RUN cat > /z.sh <<'EOT'
@@ -46,14 +54,18 @@ if echo "$RELAY_NODE_ID" | grep -qE '^[0-9]+$'; then
 fi
 
 # 启动 v2ray
+if [ -f "/etc/xray/config.json" ]; then
+xray &
+sleep 3
+else
 v2ray "-config=$SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
 echo "$(date): v2ray 启动中..."
 sleep 3
+fi
 
-# 启动 v2scar_alpine
-v2scar_alpine -id=$NODE_ID -gp=127.0.0.1:$GRPC_PORT &
-echo "$(date): v2scar 启动中..."
-sleep 3
+# 启动 v2scar
+v2scar_alpine --nodeid="$NODE_ID"
+
 
 # 每隔 60 秒检查是否还在运行
 while true; do
@@ -70,7 +82,7 @@ while true; do
     fi
 
     if ! pgrep -x "v2scar_alpine" > /dev/null; then
-        echo "$(date): v2scar_alpine 服务停止...正在重启"
+        echo "$(date): v2scar 服务停止...正在重启"
         exit 1
     fi
     
