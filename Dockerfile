@@ -56,10 +56,13 @@ if echo "$RELAY_NODE_ID" | grep -qE '^[0-9]+$'; then
 fi
 
 # 启动 v2scar
-v2scar --nodeid=$V2SCAR_NODEID
+v2scar --nodeid=$V2SCAR_NODEID &
 
 # 启动 v2ray
-xray run -config /etc/xray/server_config.json
+while [ ! -e "/etc/xray/server_config.json" ]; do
+  sleep 1
+done
+xray run -config /etc/xray/server_config.json &
 
 # 每隔 60 秒检查是否还在运行
 while true; do
