@@ -62,7 +62,7 @@ sleep 3
 fi
 
 # 启动 v2scar
-v2scar_alpine --nodeid="$NODE_ID"
+v2scar --nodeid="$NODE_ID"
 
 
 # 每隔 60 秒检查是否还在运行
@@ -79,7 +79,7 @@ while true; do
         exit 1
     fi
 
-    if ! pgrep -x "v2scar_alpine" > /dev/null; then
+    if ! pgrep -x "v2scar" > /dev/null; then
         echo "$(date): v2scar 服务停止...正在重启"
         exit 1
     fi
