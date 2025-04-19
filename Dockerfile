@@ -27,8 +27,6 @@ RUN if [ "$(arch)" = "aarch64" ]; then ARCH=linuxarm64; else ARCH=linux64; fi &&
       $(curl -s https://api.github.com/repos/jackma778/shx/releases | grep browser_download_url | cut -d '"' -f 4 | grep -m 1 v2scar_$ARCH) \
       -o /usr/local/bin/v2scar && \
       chmod +x /usr/local/bin/v2scar && \
-    curl https://raw.githubusercontent.com/jackma778/sh/main/v2scar_alpine \
-      -o /usr/local/bin/v2scar_alpine && chmod +x /usr/local/bin/v2scar_alpine && \
     curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat \
       -o /usr/local/bin/geosite.dat && \
     curl https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat \
