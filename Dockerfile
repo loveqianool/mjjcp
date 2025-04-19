@@ -11,7 +11,6 @@ env RELAY_NODE_ID=
 env V2RAY_VMESS_AEAD_FORCED=false
 
 # 复制必要的文件
-COPY --from=v2fly/v2fly-core:v4.45.2 /usr/bin/v2ray /usr/local/bin/v2ray
 COPY --from=ghcr.io/xtls/xray-core /usr/bin/xray /usr/local/bin/xray
 COPY --from=ehco1996/ehco /bin/ehco /usr/local/bin/ehco
 
