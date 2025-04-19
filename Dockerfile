@@ -37,6 +37,8 @@ RUN if [ "$(arch)" = "aarch64" ]; then ARCH=linuxarm64; else ARCH=linux64; fi &&
 RUN cat > /z.sh <<'EOT'
 #!/bin/sh
 
+mkdir /etc/xray
+cd /etc/xray
 echo "token=$TOKEN" > /etc/xray/.env
 
 # 启动 WireGuard（如果配置文件存在）
