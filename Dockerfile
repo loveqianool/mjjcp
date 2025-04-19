@@ -3,9 +3,10 @@ FROM alpine:edge
 # 设置环境变量
 env SITE=https://api.cjy.me
 env TOKEN=MJJ6688
-env NODE_ID=
+env V2SCAR_NODEID=
 env PORT=
-env GRPC_PORT=8079
+env V2SCAR_GRPC_ENDPOINT=8079
+env V2SCAR_SYNC_TIME=120
 env RELAY_NODE_ID=
 env V2RAY_VMESS_AEAD_FORCED=false
 
@@ -35,6 +36,9 @@ RUN if [ "$(arch)" = "aarch64" ]; then ARCH=linuxarm64; else ARCH=linux64; fi &&
 # 创建启动脚本
 RUN cat > /z.sh <<'EOT'
 #!/bin/sh
+
+echo "token=$TOKEN" > /etc/xray/.env
+
 # 启动 WireGuard（如果配置文件存在）
 if [ -f "/etc/wireguard/wg0.conf" ]; then
     echo "$(date): 发现 WireGuard 配置文件..."
@@ -49,19 +53,11 @@ if echo "$RELAY_NODE_ID" | grep -qE '^[0-9]+$'; then
     ehco "-c $RELAY_NODE_ID" &
 fi
 
-# 启动 v2ray
-if [ -f "/etc/xray/config.json" ]; then
-xray -confdir /etc/xray/ &
-sleep 3
-else
-v2ray "-config=$SITE/api/get_server_config?id=$NODE_ID&token=$TOKEN" &
-echo "$(date): v2ray 启动中..."
-sleep 3
-fi
-
 # 启动 v2scar
-v2scar --nodeid="$NODE_ID"
-
+v2scar --nodeid=$V2SCAR_NODEID
+sleep 15
+# 启动 v2ray
+xray run -config /etc/xray/server_config.json
 
 # 每隔 60 秒检查是否还在运行
 while true; do
@@ -71,17 +67,17 @@ while true; do
             exit 1
         fi
     fi
-    
-    if ! pgrep -x "v2ray" > /dev/null; then
-        echo "$(date): v2ray 服务停止...正在重启"
-        exit 1
-    fi
 
     if ! pgrep -x "v2scar" > /dev/null; then
         echo "$(date): v2scar 服务停止...正在重启"
         exit 1
     fi
     
+    if ! pgrep -x "xray" > /dev/null; then
+        echo "$(date): xray 服务停止...正在重启"
+        exit 1
+    fi
+
     sleep 60
 done
 EOT
