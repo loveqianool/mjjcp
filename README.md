@@ -5,7 +5,7 @@
 docker run -dit --name mjjcp --hostname mjjcp \
 --restart=unless-stopped \
 -e TZ="$(cat /etc/timezone)" \
--e NODE_ID=主机识别ID \
+-e V2SCAR_NODEID=主机识别ID \
 -e PORT=端口 \
 -p 端口:端口 -p 端口:端口/udp \
 ghcr.io/loveqianool/mjjcp:slim
@@ -55,7 +55,8 @@ docker run -dit --name mjjcp --hostname mjjcp \
 -v /lib/modules:/lib/modules:ro \
 -v /opt/docker/wireguard/wg0.conf:/etc/wireguard/wg0.conf \
 -p 端口:端口 -p 端口:端口/udp \
--e NODE_ID=主机ID \
+-e V2SCAR_NODEID=主机ID \
+-e TOKEN=MJJ6688 \
 -e PORT=端口 \
 ghcr.io/loveqianool/mjjcp
 ```
