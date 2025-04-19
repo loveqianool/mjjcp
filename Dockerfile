@@ -57,8 +57,12 @@ fi
 
 # 启动 v2scar
 v2scar --nodeid=$V2SCAR_NODEID
-sleep 3
+
 # 启动 v2ray
+while [ ! -e "/etc/xray/server_config.json" ]; do
+  sleep 1
+done
+
 xray run -config /etc/xray/server_config.json
 
 # 每隔 60 秒检查是否还在运行
