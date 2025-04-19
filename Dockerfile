@@ -57,7 +57,7 @@ fi
 
 # 启动 v2scar
 v2scar --nodeid=$V2SCAR_NODEID
-sleep 15
+sleep 3
 # 启动 v2ray
 xray run -config /etc/xray/server_config.json
 
