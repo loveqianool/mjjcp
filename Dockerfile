@@ -11,7 +11,7 @@ env RELAY_NODE_ID=
 env V2RAY_VMESS_AEAD_FORCED=false
 
 # 复制必要的文件
-COPY --from=ghcr.io/xtls/xray-core /usr/bin/xray /usr/local/bin/xray
+COPY --from=ghcr.io/xtls/xray-core /usr/local/bin/xray /usr/local/bin/xray
 COPY --from=ehco1996/ehco /bin/ehco /usr/local/bin/ehco
 
 # 安装必要的工具和证书
