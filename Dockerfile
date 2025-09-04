@@ -44,8 +44,8 @@ echo "token=$TOKEN" > /etc/xray/.env
 if [ -f "/etc/wireguard/wg0.conf" ]; then
     echo "$(date): 发现 WireGuard 配置文件..."
     echo "$(date): 启动 WireGuard..."
+    wg-quick up wg0
     resolvconf -u
-    echo "nameserver 1.0.0.1" > /etc/resolv.conf
     wg-quick up wg0
     sleep 3
 fi
