@@ -41,14 +41,3 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
-      - uses: kitabisa/docker-slim-action@master
-        env:
-          DSLIM_HTTP_PROBE: false
-          DSLIM_INCLUDE_PATH: /usr/local/bin
-          DSLIM_INCLUDE_EXE: wg-quick
-        with:
-          target: ghcr.io/${{ github.repository }}:latest
-          tag: "slim"
-
-      - run: docker image push "ghcr.io/${{ github.repository }}:slim"
